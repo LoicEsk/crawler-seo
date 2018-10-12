@@ -1,0 +1,26 @@
+{
+  "name": "crawler-seo",
+  "version": "1.0.0",
+  "description": "script d'analyse de site",
+  "main": "run.js",
+  "scripts": {
+    "test": "casperjs run.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LoicEsk/crawler-seo.git"
+  },
+  "keywords": [
+    "seo",
+    "casperjs"
+  ],
+  "author": "Loïc Laurent",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LoicEsk/crawler-seo/issues"
+  },
+  "homepage": "https://github.com/LoicEsk/crawler-seo#readme",
+  "devDependencies": {
+    "casperjs": "^1.1.4"
+  }
+}
