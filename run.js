@@ -36,7 +36,7 @@ crawlUrl( startURL );
 
 function crawlUrl(url) {
   casper.thenOpen( url, function(response) {
-    this.echo('Analyse du lien ' + url, 'TRACE');
+    this.echo('==> ' + url, "INFO_BAR");
     this.echo('(' + (crawlerLog.length +1) + '/' + links.length +')');
     this.echo('Status http : ' + response.status);
     this.echo('-- ' + this.getTitle());
@@ -48,35 +48,41 @@ function crawlUrl(url) {
     var newLinks = this.evaluate(getLinks);
     log['nbLinks'] = newLinks.length;
 
+
+
     // analyse des liens
     var nbInterne = 0;
     var nbExterne = 0;
     var nbMails = 0;
     for(var i in newLinks) {
-      var regexRootLink = new RegExp( '(https:\/\/)|(http://)|(\/\/)', 'i');
-      var regexAnchor = new RegExp('^/{0,1}#');
-      var isAnchor = regexAnchor.test( newLinks[i] )
-      var isRootLink = regexRootLink.test( newLinks[i]);
+      var regDom = new RegExp( '(https?:\/\/)([a-zA-Z0-9-_\.]*)\/?', 'gi');
+      var regexLienComplet = new RegExp( '^(https?:\/\/)', 'i');
+      var regexLienRacine = new RegExp('^\/', 'i');
+      var regexAncre = new RegExp('^#', 'i');
+
+      var isLienComplet = regexLienComplet.test( newLinks[i]);
+      var isLienRacine = regexLienRacine.test( newLinks[i]);
+      var isAncre = regexAncre.test( newLinks[i]);
 
       // console.log('Lien trouvé : ' + newLinks[i]);
-      if( !isRootLink){
+      if( !isLienComplet){
         var cleanURL = url;
-
-        // suppression des ancres
-        var cleanAnchor = url.match(/^(.*)#.*$/);
-        if( cleanAnchor ) cleanURL = cleanAnchor[1];
-
-        if(cleanURL.lastIndexOf("/") == cleanURL.length-1)
-          newLinks[i] = cleanURL.substr(0, -1) + newLinks[i];
-        else {
-          newLinks[i] = cleanURL + newLinks[i];
+        if(isLienRacine) {
+          var result = regDom.exec( url );
+          newLinks[i] = result[1] + result[2] + newLinks[i];
+        } else {
+          if(cleanURL.lastIndexOf("/") == cleanURL.length-1)
+            newLinks[i] = cleanURL.substr(0, -1) + newLinks[i];
+          else {
+            newLinks[i] = cleanURL + newLinks[i];
+          }
         }
       }
       // console.log('Lien calculé : ' + newLinks[i]);
 
-      var isExterne = isRootLink && domain != getDomain( newLinks[i] );
+      var isExterne = domain != getDomain( newLinks[i] );
       var isMail = newLinks[i].match(/^mailto:/i)
-      if( isExterne || isMail ) {
+      if( isExterne || isMail || isAncre ) {
         // lien extern
         // this.echo('lien externe ignoré : ' + newLinks[i], "WARNING");
         if( isExterne ) nbExterne ++;
@@ -114,18 +120,19 @@ function addToCrawler(newLink) {
   }
   if(isNew) {
     links.push(newLink); // ajout à la liste à crawler
-    console.log('--> Ajout de ' + newLink);
+    // console.log('--> Ajout de ' + newLink);
     crawlUrl( newLink );
   }
   // console.log(links);
 }
 
 function getDomain( url ) {
-  var regDom = new RegExp( '(http://)|(https://)([a-zA-Z0-9-_\.]*)(\/*.*)$', 'gi');
+  var regDom = new RegExp( '(https?:\/\/)([a-zA-Z0-9-_\.]*)(\/*.*)?$', 'gi');
   var result = regDom.exec( url );
   // console.log('domaine de ' + url);
   // console.log(result);
-  return result[3];
+  if(!result) return '';
+  return result[2];
 }
 
 casper.on('run.complete', function() {
