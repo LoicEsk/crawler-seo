@@ -61,4 +61,5 @@ typings/
 .next
 
 package-lock.json
-analyse/log.csv
+analyse/*.csv
+*.DS_Store

@@ -22,12 +22,12 @@ else {
 casper.echo('Analyse de l\'URL ' + startURL);
 links.push(startURL);
 var domain = getDomain(startURL);
-casper.echo('Domaine d\'analyse : ' + domain);
+casper.echo('Domaine d\'analyse : ' + domain, 'INFO');
 
 // suppr de l'ancien fichier de logs
-var logFile = 'analyse/log.csv';
+var logFile = 'analyse/' + domain + '.csv';
 console.log('Fichier de log : ', logFile);
-fs.write(logFile, 'URL;Titre;lien externes;Lien internes; mailto', 'w'); // intialise le fichier de logs
+fs.write(logFile, 'URL;Titre;Status;lien externes;Lien internes; mailto', 'w'); // intialise le fichier de logs
 
 
 casper.start();
@@ -36,14 +36,15 @@ crawlUrl( startURL );
 
 function crawlUrl(url) {
   casper.thenOpen( url, function(response) {
-    this.echo('==> ' + url, "INFO_BAR");
-    this.echo('(' + (crawlerLog.length +1) + '/' + links.length +')');
-    this.echo('Status http : ' + response.status);
+    this.echo('');
+    this.echo('(' + (crawlerLog.length +1) + '/' + links.length +') -> ' + url, 'INFO');
+    this.echo('Status http : ' + response.status, response.status == '200' ? 'INFO' : 'WARNING');
     this.echo('-- ' + this.getTitle());
 
     var log = {
-      'url': url,
-      'title': this.getTitle(),
+      'url':      url,
+      'title':    this.getTitle(),
+      'status':   response.status,
     }
     var newLinks = this.evaluate(getLinks);
     log['nbLinks'] = newLinks.length;
@@ -112,8 +113,11 @@ function crawlUrl(url) {
 
 function addToCrawler(newLink) {
   var isNew = true;
+  var regNoHttp = /^(https?:\/\/)(.*)$/i;
+  var cleanLink = newLink.replace( regNoHttp, '$2');
+  // casper.echo('lien filtré = ' + cleanLink );
   for(var j in links) {
-    if(links[j] == newLink) {
+    if(links[j].replace(regNoHttp, '$2') == cleanLink) {
       isNew = false;
       break;
     }
