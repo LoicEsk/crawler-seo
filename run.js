@@ -27,7 +27,7 @@ casper.echo('Domaine d\'analyse : ' + domain, 'INFO');
 // suppr de l'ancien fichier de logs
 var logFile = 'analyse/' + domain + '.csv';
 console.log('Fichier de log : ', logFile);
-fs.write(logFile, 'URL;Titre;Status;lien externes;Lien internes; mailto', 'w'); // intialise le fichier de logs
+fs.write(logFile, 'URL;Titre;Status;h1;lien externes;Lien internes; mailto', 'w'); // intialise le fichier de logs
 
 
 casper.start();
@@ -39,16 +39,27 @@ function crawlUrl(url) {
     this.echo('');
     this.echo('(' + (crawlerLog.length +1) + '/' + links.length +') -> ' + url, 'INFO');
     this.echo('Status http : ' + response.status, response.status == '200' ? 'INFO' : 'WARNING');
-    this.echo('-- ' + this.getTitle());
+    this.echo('- Titre : ' + this.getTitle());
+
+    // get h1
+    var h1 = '';
+    if (this.exists('h1')) {
+        h1 = this.fetchText('h1')
+        this.echo('- H1 : ' + h1);
+    } else {
+      this.echo( 'H1 absent !', 'WARN_BAR');
+      h1 = "ERREUR : h1 absent";
+    }
+
 
     var log = {
       'url':      url,
       'title':    this.getTitle(),
       'status':   response.status,
+      'h1' :      h1
     }
     var newLinks = this.evaluate(getLinks);
     log['nbLinks'] = newLinks.length;
-
 
 
     // analyse des liens
